@@ -12,7 +12,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /** Client for a Forge rendering server. */
 public class ForgeClient {
@@ -120,6 +122,8 @@ public class ForgeClient {
         private WatermarkLayer pdfWatermarkLayer;
         private PdfStandard pdfStandard;
         private List<Object[]> pdfEmbeddedFiles; // [path, data, mimeType, description, relationship]
+        private String pdfWatermarkPages;
+        private List<Map<String, Object>> pdfBarcodes;
 
         RenderRequestBuilder(ForgeClient client, String html, String url) {
             this.client = client;
@@ -162,6 +166,34 @@ public class ForgeClient {
             this.pdfEmbeddedFiles.add(new Object[]{path, base64Data, mimeType, description, relationship});
             return this;
         }
+        public RenderRequestBuilder pdfWatermarkPages(String pages) { this.pdfWatermarkPages = pages; return this; }
+        public RenderRequestBuilder pdfBarcode(BarcodeType type, String data) {
+            Map<String, Object> bc = new LinkedHashMap<>();
+            bc.put("type", type.getValue());
+            bc.put("data", data);
+            if (this.pdfBarcodes == null) this.pdfBarcodes = new ArrayList<>();
+            this.pdfBarcodes.add(bc);
+            return this;
+        }
+        public RenderRequestBuilder pdfBarcode(BarcodeType type, String data, Double x, Double y,
+                Double width, Double height, BarcodeAnchor anchor, String foreground,
+                String background, Boolean drawBackground, String pages) {
+            Map<String, Object> bc = new LinkedHashMap<>();
+            bc.put("type", type.getValue());
+            bc.put("data", data);
+            if (x != null) bc.put("x", x);
+            if (y != null) bc.put("y", y);
+            if (width != null) bc.put("width", width);
+            if (height != null) bc.put("height", height);
+            if (anchor != null) bc.put("anchor", anchor.getValue());
+            if (foreground != null) bc.put("foreground", foreground);
+            if (background != null) bc.put("background", background);
+            if (drawBackground != null) bc.put("draw_background", drawBackground);
+            if (pages != null) bc.put("pages", pages);
+            if (this.pdfBarcodes == null) this.pdfBarcodes = new ArrayList<>();
+            this.pdfBarcodes.add(bc);
+            return this;
+        }
 
         /** Build the JSON payload. */
         public JsonObject buildPayload() {
@@ -200,8 +232,8 @@ public class ForgeClient {
                     || pdfKeywords != null || pdfCreator != null || pdfBookmarks != null
                     || pdfWatermarkText != null || pdfWatermarkImage != null || pdfWatermarkOpacity != null
                     || pdfWatermarkRotation != null || pdfWatermarkColor != null || pdfWatermarkFontSize != null
-                    || pdfWatermarkScale != null || pdfWatermarkLayer != null
-                    || pdfStandard != null || pdfEmbeddedFiles != null) {
+                    || pdfWatermarkScale != null || pdfWatermarkLayer != null || pdfWatermarkPages != null
+                    || pdfStandard != null || pdfEmbeddedFiles != null || pdfBarcodes != null) {
                 JsonObject pdf = new JsonObject();
                 if (pdfTitle != null) pdf.addProperty("title", pdfTitle);
                 if (pdfAuthor != null) pdf.addProperty("author", pdfAuthor);
@@ -212,7 +244,7 @@ public class ForgeClient {
                 if (pdfStandard != null) pdf.addProperty("standard", pdfStandard.getValue());
                 if (pdfWatermarkText != null || pdfWatermarkImage != null || pdfWatermarkOpacity != null
                         || pdfWatermarkRotation != null || pdfWatermarkColor != null || pdfWatermarkFontSize != null
-                        || pdfWatermarkScale != null || pdfWatermarkLayer != null) {
+                        || pdfWatermarkScale != null || pdfWatermarkLayer != null || pdfWatermarkPages != null) {
                     JsonObject wm = new JsonObject();
                     if (pdfWatermarkText != null) wm.addProperty("text", pdfWatermarkText);
                     if (pdfWatermarkImage != null) wm.addProperty("image_data", pdfWatermarkImage);
@@ -222,6 +254,7 @@ public class ForgeClient {
                     if (pdfWatermarkFontSize != null) wm.addProperty("font_size", pdfWatermarkFontSize);
                     if (pdfWatermarkScale != null) wm.addProperty("scale", pdfWatermarkScale);
                     if (pdfWatermarkLayer != null) wm.addProperty("layer", pdfWatermarkLayer.getValue());
+                    if (pdfWatermarkPages != null) wm.addProperty("pages", pdfWatermarkPages);
                     pdf.add("watermark", wm);
                 }
                 if (pdfEmbeddedFiles != null) {
@@ -236,6 +269,20 @@ public class ForgeClient {
                         arr.add(e);
                     }
                     pdf.add("embedded_files", arr);
+                }
+                if (pdfBarcodes != null) {
+                    JsonArray barcodeArr = new JsonArray();
+                    for (Map<String, Object> bc : pdfBarcodes) {
+                        JsonObject b = new JsonObject();
+                        for (Map.Entry<String, Object> entry : bc.entrySet()) {
+                            Object val = entry.getValue();
+                            if (val instanceof String) b.addProperty(entry.getKey(), (String) val);
+                            else if (val instanceof Number) b.addProperty(entry.getKey(), (Number) val);
+                            else if (val instanceof Boolean) b.addProperty(entry.getKey(), (Boolean) val);
+                        }
+                        barcodeArr.add(b);
+                    }
+                    pdf.add("barcodes", barcodeArr);
                 }
                 p.add("pdf", pdf);
             }
