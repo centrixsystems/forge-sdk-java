@@ -105,6 +105,20 @@ byte[] pdf = client.renderHtml("<h1>Annual Report 2026</h1>")
     .send();
 ```
 
+### PDF Watermarks
+
+Add text or image watermarks to each page.
+
+```java
+byte[] pdf = client.renderHtml("<h1>Draft Report</h1>")
+    .pdfWatermarkText("DRAFT")
+    .pdfWatermarkOpacity(0.15)
+    .pdfWatermarkRotation(-45)
+    .pdfWatermarkColor("#888888")
+    .pdfWatermarkLayer(WatermarkLayer.OVER)
+    .send();
+```
+
 ### Custom Timeout
 
 ```java
@@ -160,6 +174,14 @@ All methods return the builder for chaining. Call `.send()` to execute.
 | `pdfKeywords` | `String` | PDF keywords (comma-separated) |
 | `pdfCreator` | `String` | PDF creator application name |
 | `pdfBookmarks` | `boolean` | Generate PDF bookmarks from headings |
+| `pdfWatermarkText` | `String` | Watermark text on each page |
+| `pdfWatermarkImage` | `String` | Base64-encoded PNG/JPEG watermark image |
+| `pdfWatermarkOpacity` | `double` | Watermark opacity (0.0-1.0, default: 0.15) |
+| `pdfWatermarkRotation` | `double` | Watermark rotation in degrees (default: -45) |
+| `pdfWatermarkColor` | `String` | Watermark text color as hex (default: #888888) |
+| `pdfWatermarkFontSize` | `double` | Watermark font size in PDF points (default: auto) |
+| `pdfWatermarkScale` | `double` | Watermark image scale (0.0-1.0, default: 0.5) |
+| `pdfWatermarkLayer` | `WatermarkLayer` | Layer position: `OVER` or `UNDER` |
 
 | Terminal Method | Returns | Description |
 |-----------------|---------|-------------|
@@ -174,6 +196,7 @@ All methods return the builder for chaining. Call `.send()` to execute.
 | `Flow` | `AUTO`, `PAGINATE`, `CONTINUOUS` |
 | `DitherMethod` | `NONE`, `FLOYD_STEINBERG`, `ATKINSON`, `ORDERED` |
 | `Palette` | `AUTO`, `BLACK_WHITE`, `GRAYSCALE`, `EINK` |
+| `WatermarkLayer` | `OVER`, `UNDER` |
 
 ### Exceptions
 

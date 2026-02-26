@@ -109,6 +109,14 @@ public class ForgeClient {
         private String pdfKeywords;
         private String pdfCreator;
         private Boolean pdfBookmarks;
+        private String pdfWatermarkText;
+        private String pdfWatermarkImage; // base64-encoded
+        private Double pdfWatermarkOpacity;
+        private Double pdfWatermarkRotation;
+        private String pdfWatermarkColor;
+        private Double pdfWatermarkFontSize;
+        private Double pdfWatermarkScale;
+        private WatermarkLayer pdfWatermarkLayer;
 
         RenderRequestBuilder(ForgeClient client, String html, String url) {
             this.client = client;
@@ -136,6 +144,14 @@ public class ForgeClient {
         public RenderRequestBuilder pdfKeywords(String keywords) { this.pdfKeywords = keywords; return this; }
         public RenderRequestBuilder pdfCreator(String creator) { this.pdfCreator = creator; return this; }
         public RenderRequestBuilder pdfBookmarks(boolean bookmarks) { this.pdfBookmarks = bookmarks; return this; }
+        public RenderRequestBuilder pdfWatermarkText(String text) { this.pdfWatermarkText = text; return this; }
+        public RenderRequestBuilder pdfWatermarkImage(String base64Data) { this.pdfWatermarkImage = base64Data; return this; }
+        public RenderRequestBuilder pdfWatermarkOpacity(double opacity) { this.pdfWatermarkOpacity = opacity; return this; }
+        public RenderRequestBuilder pdfWatermarkRotation(double degrees) { this.pdfWatermarkRotation = degrees; return this; }
+        public RenderRequestBuilder pdfWatermarkColor(String hex) { this.pdfWatermarkColor = hex; return this; }
+        public RenderRequestBuilder pdfWatermarkFontSize(double size) { this.pdfWatermarkFontSize = size; return this; }
+        public RenderRequestBuilder pdfWatermarkScale(double scale) { this.pdfWatermarkScale = scale; return this; }
+        public RenderRequestBuilder pdfWatermarkLayer(WatermarkLayer layer) { this.pdfWatermarkLayer = layer; return this; }
 
         /** Build the JSON payload. */
         public JsonObject buildPayload() {
@@ -171,7 +187,10 @@ public class ForgeClient {
             }
 
             if (pdfTitle != null || pdfAuthor != null || pdfSubject != null
-                    || pdfKeywords != null || pdfCreator != null || pdfBookmarks != null) {
+                    || pdfKeywords != null || pdfCreator != null || pdfBookmarks != null
+                    || pdfWatermarkText != null || pdfWatermarkImage != null || pdfWatermarkOpacity != null
+                    || pdfWatermarkRotation != null || pdfWatermarkColor != null || pdfWatermarkFontSize != null
+                    || pdfWatermarkScale != null || pdfWatermarkLayer != null) {
                 JsonObject pdf = new JsonObject();
                 if (pdfTitle != null) pdf.addProperty("title", pdfTitle);
                 if (pdfAuthor != null) pdf.addProperty("author", pdfAuthor);
@@ -179,6 +198,20 @@ public class ForgeClient {
                 if (pdfKeywords != null) pdf.addProperty("keywords", pdfKeywords);
                 if (pdfCreator != null) pdf.addProperty("creator", pdfCreator);
                 if (pdfBookmarks != null) pdf.addProperty("bookmarks", pdfBookmarks);
+                if (pdfWatermarkText != null || pdfWatermarkImage != null || pdfWatermarkOpacity != null
+                        || pdfWatermarkRotation != null || pdfWatermarkColor != null || pdfWatermarkFontSize != null
+                        || pdfWatermarkScale != null || pdfWatermarkLayer != null) {
+                    JsonObject wm = new JsonObject();
+                    if (pdfWatermarkText != null) wm.addProperty("text", pdfWatermarkText);
+                    if (pdfWatermarkImage != null) wm.addProperty("image_data", pdfWatermarkImage);
+                    if (pdfWatermarkOpacity != null) wm.addProperty("opacity", pdfWatermarkOpacity);
+                    if (pdfWatermarkRotation != null) wm.addProperty("rotation", pdfWatermarkRotation);
+                    if (pdfWatermarkColor != null) wm.addProperty("color", pdfWatermarkColor);
+                    if (pdfWatermarkFontSize != null) wm.addProperty("font_size", pdfWatermarkFontSize);
+                    if (pdfWatermarkScale != null) wm.addProperty("scale", pdfWatermarkScale);
+                    if (pdfWatermarkLayer != null) wm.addProperty("layer", pdfWatermarkLayer.getValue());
+                    pdf.add("watermark", wm);
+                }
                 p.add("pdf", pdf);
             }
 
