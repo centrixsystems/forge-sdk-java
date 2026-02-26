@@ -103,6 +103,12 @@ public class ForgeClient {
         private Integer colors;
         private Object palette; // Palette enum or List<String>
         private DitherMethod dither;
+        private String pdfTitle;
+        private String pdfAuthor;
+        private String pdfSubject;
+        private String pdfKeywords;
+        private String pdfCreator;
+        private Boolean pdfBookmarks;
 
         RenderRequestBuilder(ForgeClient client, String html, String url) {
             this.client = client;
@@ -124,6 +130,12 @@ public class ForgeClient {
         public RenderRequestBuilder palette(Palette p) { this.palette = p; return this; }
         public RenderRequestBuilder customPalette(List<String> colors) { this.palette = colors; return this; }
         public RenderRequestBuilder dither(DitherMethod method) { this.dither = method; return this; }
+        public RenderRequestBuilder pdfTitle(String title) { this.pdfTitle = title; return this; }
+        public RenderRequestBuilder pdfAuthor(String author) { this.pdfAuthor = author; return this; }
+        public RenderRequestBuilder pdfSubject(String subject) { this.pdfSubject = subject; return this; }
+        public RenderRequestBuilder pdfKeywords(String keywords) { this.pdfKeywords = keywords; return this; }
+        public RenderRequestBuilder pdfCreator(String creator) { this.pdfCreator = creator; return this; }
+        public RenderRequestBuilder pdfBookmarks(boolean bookmarks) { this.pdfBookmarks = bookmarks; return this; }
 
         /** Build the JSON payload. */
         public JsonObject buildPayload() {
@@ -156,6 +168,18 @@ public class ForgeClient {
                 }
                 if (dither != null) q.addProperty("dither", dither.getValue());
                 p.add("quantize", q);
+            }
+
+            if (pdfTitle != null || pdfAuthor != null || pdfSubject != null
+                    || pdfKeywords != null || pdfCreator != null || pdfBookmarks != null) {
+                JsonObject pdf = new JsonObject();
+                if (pdfTitle != null) pdf.addProperty("title", pdfTitle);
+                if (pdfAuthor != null) pdf.addProperty("author", pdfAuthor);
+                if (pdfSubject != null) pdf.addProperty("subject", pdfSubject);
+                if (pdfKeywords != null) pdf.addProperty("keywords", pdfKeywords);
+                if (pdfCreator != null) pdf.addProperty("creator", pdfCreator);
+                if (pdfBookmarks != null) pdf.addProperty("bookmarks", pdfBookmarks);
+                p.add("pdf", pdf);
             }
 
             return p;

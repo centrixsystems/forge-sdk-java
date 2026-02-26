@@ -87,6 +87,24 @@ byte[] img = client.renderHtml("<h1>Brand</h1>")
     .send();
 ```
 
+### PDF Metadata
+
+Set PDF document properties like title, author, and bookmarks.
+
+```java
+byte[] pdf = client.renderHtml("<h1>Annual Report 2026</h1>")
+    .format(OutputFormat.PDF)
+    .paper("a4")
+    .flow(Flow.PAGINATE)
+    .pdfTitle("Annual Report 2026")
+    .pdfAuthor("Centrix Systems")
+    .pdfSubject("Financial Results")
+    .pdfKeywords("annual,report,finance")
+    .pdfCreator("Centrix ERP")
+    .pdfBookmarks(true)
+    .send();
+```
+
 ### Custom Timeout
 
 ```java
@@ -136,6 +154,12 @@ All methods return the builder for chaining. Call `.send()` to execute.
 | `palette` | `Palette` | Built-in palette preset |
 | `customPalette` | `List<String>` | List of hex color strings |
 | `dither` | `DitherMethod` | Dithering algorithm |
+| `pdfTitle` | `String` | PDF document title |
+| `pdfAuthor` | `String` | PDF document author |
+| `pdfSubject` | `String` | PDF document subject |
+| `pdfKeywords` | `String` | PDF keywords (comma-separated) |
+| `pdfCreator` | `String` | PDF creator application name |
+| `pdfBookmarks` | `boolean` | Generate PDF bookmarks from headings |
 
 | Terminal Method | Returns | Description |
 |-----------------|---------|-------------|
