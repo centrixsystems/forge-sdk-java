@@ -31,17 +31,17 @@ public class ForgeClient {
     }
 
     /** Start a render request from an HTML string. */
-    public RenderRequest renderHtml(String html) {
-        return new RenderRequest(this, html, null);
+    public RenderRequestBuilder renderHtml(String html) {
+        return new RenderRequestBuilder(this, html, null);
     }
 
     /** Start a render request from a URL. */
-    public RenderRequest renderUrl(String url) {
-        return new RenderRequest(this, null, url);
+    public RenderRequestBuilder renderUrl(String url) {
+        return new RenderRequestBuilder(this, null, url);
     }
 
     /** Check if the server is healthy. */
-    public boolean health() throws IOException, InterruptedException {
+    public boolean health() {
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/health"))
                 .GET()
@@ -49,12 +49,12 @@ public class ForgeClient {
         try {
             HttpResponse<Void> resp = httpClient.send(req, HttpResponse.BodyHandlers.discarding());
             return resp.statusCode() == 200;
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             return false;
         }
     }
 
-    byte[] send(JsonObject payload) throws ForgeException, IOException, InterruptedException {
+    byte[] send(JsonObject payload) throws ForgeException {
         String body = GSON.toJson(payload);
 
         HttpRequest req = HttpRequest.newBuilder()
@@ -66,8 +66,8 @@ public class ForgeClient {
         HttpResponse<byte[]> resp;
         try {
             resp = httpClient.send(req, HttpResponse.BodyHandlers.ofByteArray());
-        } catch (IOException e) {
-            throw new ForgeException("connection error: " + e.getMessage(), e);
+        } catch (IOException | InterruptedException e) {
+            throw new ForgeConnectionException(e);
         }
 
         if (resp.statusCode() != 200) {
@@ -86,7 +86,7 @@ public class ForgeClient {
     }
 
     /** Builder for a render request. */
-    public static class RenderRequest {
+    public static class RenderRequestBuilder {
         private final ForgeClient client;
         private final String html;
         private final String url;
@@ -104,26 +104,26 @@ public class ForgeClient {
         private Object palette; // Palette enum or List<String>
         private DitherMethod dither;
 
-        RenderRequest(ForgeClient client, String html, String url) {
+        RenderRequestBuilder(ForgeClient client, String html, String url) {
             this.client = client;
             this.html = html;
             this.url = url;
         }
 
-        public RenderRequest format(OutputFormat f) { this.format = f; return this; }
-        public RenderRequest width(int px) { this.width = px; return this; }
-        public RenderRequest height(int px) { this.height = px; return this; }
-        public RenderRequest paper(String size) { this.paper = size; return this; }
-        public RenderRequest orientation(Orientation o) { this.orientation = o; return this; }
-        public RenderRequest margins(String m) { this.margins = m; return this; }
-        public RenderRequest flow(Flow f) { this.flow = f; return this; }
-        public RenderRequest density(double dpi) { this.density = dpi; return this; }
-        public RenderRequest background(String color) { this.background = color; return this; }
-        public RenderRequest timeout(int seconds) { this.timeout = seconds; return this; }
-        public RenderRequest colors(int n) { this.colors = n; return this; }
-        public RenderRequest palette(Palette p) { this.palette = p; return this; }
-        public RenderRequest customPalette(List<String> colors) { this.palette = colors; return this; }
-        public RenderRequest dither(DitherMethod method) { this.dither = method; return this; }
+        public RenderRequestBuilder format(OutputFormat f) { this.format = f; return this; }
+        public RenderRequestBuilder width(int px) { this.width = px; return this; }
+        public RenderRequestBuilder height(int px) { this.height = px; return this; }
+        public RenderRequestBuilder paper(String size) { this.paper = size; return this; }
+        public RenderRequestBuilder orientation(Orientation o) { this.orientation = o; return this; }
+        public RenderRequestBuilder margins(String m) { this.margins = m; return this; }
+        public RenderRequestBuilder flow(Flow f) { this.flow = f; return this; }
+        public RenderRequestBuilder density(double dpi) { this.density = dpi; return this; }
+        public RenderRequestBuilder background(String color) { this.background = color; return this; }
+        public RenderRequestBuilder timeout(int seconds) { this.timeout = seconds; return this; }
+        public RenderRequestBuilder colors(int n) { this.colors = n; return this; }
+        public RenderRequestBuilder palette(Palette p) { this.palette = p; return this; }
+        public RenderRequestBuilder customPalette(List<String> colors) { this.palette = colors; return this; }
+        public RenderRequestBuilder dither(DitherMethod method) { this.dither = method; return this; }
 
         /** Build the JSON payload. */
         public JsonObject buildPayload() {
@@ -162,7 +162,7 @@ public class ForgeClient {
         }
 
         /** Send the render request and return raw output bytes. */
-        public byte[] send() throws ForgeException, IOException, InterruptedException {
+        public byte[] send() throws ForgeException {
             return client.send(buildPayload());
         }
     }
