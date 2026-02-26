@@ -11,6 +11,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 /** Client for a Forge rendering server. */
@@ -117,6 +118,8 @@ public class ForgeClient {
         private Double pdfWatermarkFontSize;
         private Double pdfWatermarkScale;
         private WatermarkLayer pdfWatermarkLayer;
+        private PdfStandard pdfStandard;
+        private List<Object[]> pdfEmbeddedFiles; // [path, data, mimeType, description, relationship]
 
         RenderRequestBuilder(ForgeClient client, String html, String url) {
             this.client = client;
@@ -152,6 +155,13 @@ public class ForgeClient {
         public RenderRequestBuilder pdfWatermarkFontSize(double size) { this.pdfWatermarkFontSize = size; return this; }
         public RenderRequestBuilder pdfWatermarkScale(double scale) { this.pdfWatermarkScale = scale; return this; }
         public RenderRequestBuilder pdfWatermarkLayer(WatermarkLayer layer) { this.pdfWatermarkLayer = layer; return this; }
+        public RenderRequestBuilder pdfStandard(PdfStandard standard) { this.pdfStandard = standard; return this; }
+        public RenderRequestBuilder pdfAttach(String path, String base64Data) { return pdfAttach(path, base64Data, null, null, null); }
+        public RenderRequestBuilder pdfAttach(String path, String base64Data, String mimeType, String description, EmbedRelationship relationship) {
+            if (this.pdfEmbeddedFiles == null) this.pdfEmbeddedFiles = new ArrayList<>();
+            this.pdfEmbeddedFiles.add(new Object[]{path, base64Data, mimeType, description, relationship});
+            return this;
+        }
 
         /** Build the JSON payload. */
         public JsonObject buildPayload() {
@@ -190,7 +200,8 @@ public class ForgeClient {
                     || pdfKeywords != null || pdfCreator != null || pdfBookmarks != null
                     || pdfWatermarkText != null || pdfWatermarkImage != null || pdfWatermarkOpacity != null
                     || pdfWatermarkRotation != null || pdfWatermarkColor != null || pdfWatermarkFontSize != null
-                    || pdfWatermarkScale != null || pdfWatermarkLayer != null) {
+                    || pdfWatermarkScale != null || pdfWatermarkLayer != null
+                    || pdfStandard != null || pdfEmbeddedFiles != null) {
                 JsonObject pdf = new JsonObject();
                 if (pdfTitle != null) pdf.addProperty("title", pdfTitle);
                 if (pdfAuthor != null) pdf.addProperty("author", pdfAuthor);
@@ -198,6 +209,7 @@ public class ForgeClient {
                 if (pdfKeywords != null) pdf.addProperty("keywords", pdfKeywords);
                 if (pdfCreator != null) pdf.addProperty("creator", pdfCreator);
                 if (pdfBookmarks != null) pdf.addProperty("bookmarks", pdfBookmarks);
+                if (pdfStandard != null) pdf.addProperty("standard", pdfStandard.getValue());
                 if (pdfWatermarkText != null || pdfWatermarkImage != null || pdfWatermarkOpacity != null
                         || pdfWatermarkRotation != null || pdfWatermarkColor != null || pdfWatermarkFontSize != null
                         || pdfWatermarkScale != null || pdfWatermarkLayer != null) {
@@ -211,6 +223,19 @@ public class ForgeClient {
                     if (pdfWatermarkScale != null) wm.addProperty("scale", pdfWatermarkScale);
                     if (pdfWatermarkLayer != null) wm.addProperty("layer", pdfWatermarkLayer.getValue());
                     pdf.add("watermark", wm);
+                }
+                if (pdfEmbeddedFiles != null) {
+                    JsonArray arr = new JsonArray();
+                    for (Object[] ef : pdfEmbeddedFiles) {
+                        JsonObject e = new JsonObject();
+                        e.addProperty("path", (String) ef[0]);
+                        e.addProperty("data", (String) ef[1]);
+                        if (ef[2] != null) e.addProperty("mime_type", (String) ef[2]);
+                        if (ef[3] != null) e.addProperty("description", (String) ef[3]);
+                        if (ef[4] != null) e.addProperty("relationship", ((EmbedRelationship) ef[4]).getValue());
+                        arr.add(e);
+                    }
+                    pdf.add("embedded_files", arr);
                 }
                 p.add("pdf", pdf);
             }

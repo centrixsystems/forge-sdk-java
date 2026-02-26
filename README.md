@@ -119,6 +119,33 @@ byte[] pdf = client.renderHtml("<h1>Draft Report</h1>")
     .send();
 ```
 
+### PDF/A Archival Output
+
+Generate PDF/A-compliant documents for long-term archiving.
+
+```java
+byte[] pdf = client.renderHtml("<h1>Archival Report</h1>")
+    .pdfStandard(PdfStandard.A2B)
+    .pdfTitle("Archival Report")
+    .send();
+```
+
+### Embedded Files (ZUGFeRD/Factur-X)
+
+Attach files to PDF output. Requires PDF/A-3b for embedded file attachments.
+
+```java
+import java.util.Base64;
+
+byte[] xmlBytes = Files.readAllBytes(Path.of("factur-x.xml"));
+String xmlData = Base64.getEncoder().encodeToString(xmlBytes);
+
+byte[] pdf = client.renderHtml("<h1>Invoice #1234</h1>")
+    .pdfStandard(PdfStandard.A3B)
+    .pdfAttach("factur-x.xml", xmlData, "text/xml", "Factur-X invoice", EmbedRelationship.ALTERNATIVE)
+    .send();
+```
+
 ### Custom Timeout
 
 ```java
@@ -182,6 +209,8 @@ All methods return the builder for chaining. Call `.send()` to execute.
 | `pdfWatermarkFontSize` | `double` | Watermark font size in PDF points (default: auto) |
 | `pdfWatermarkScale` | `double` | Watermark image scale (0.0-1.0, default: 0.5) |
 | `pdfWatermarkLayer` | `WatermarkLayer` | Layer position: `OVER` or `UNDER` |
+| `pdfStandard` | `PdfStandard` | PDF standard: `NONE`, `A2B`, `A3B` |
+| `pdfAttach` | `String, String, ...` | Embed file: path, base64 data, mime type, description, relationship |
 
 | Terminal Method | Returns | Description |
 |-----------------|---------|-------------|
@@ -197,6 +226,8 @@ All methods return the builder for chaining. Call `.send()` to execute.
 | `DitherMethod` | `NONE`, `FLOYD_STEINBERG`, `ATKINSON`, `ORDERED` |
 | `Palette` | `AUTO`, `BLACK_WHITE`, `GRAYSCALE`, `EINK` |
 | `WatermarkLayer` | `OVER`, `UNDER` |
+| `PdfStandard` | `NONE`, `A2B`, `A3B` |
+| `EmbedRelationship` | `ALTERNATIVE`, `SUPPLEMENT`, `DATA`, `SOURCE`, `UNSPECIFIED` |
 
 ### Exceptions
 
