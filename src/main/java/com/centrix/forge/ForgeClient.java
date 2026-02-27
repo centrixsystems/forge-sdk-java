@@ -112,6 +112,7 @@ public class ForgeClient {
         private String pdfKeywords;
         private String pdfCreator;
         private Boolean pdfBookmarks;
+        private Boolean pdfPageNumbers;
         private String pdfWatermarkText;
         private String pdfWatermarkImage; // base64-encoded
         private Double pdfWatermarkOpacity;
@@ -124,6 +125,18 @@ public class ForgeClient {
         private List<Object[]> pdfEmbeddedFiles; // [path, data, mimeType, description, relationship]
         private String pdfWatermarkPages;
         private List<Map<String, Object>> pdfBarcodes;
+        private String pdfMode;
+        private String pdfSignCertificate;
+        private String pdfSignPassword;
+        private String pdfSignName;
+        private String pdfSignReason;
+        private String pdfSignLocation;
+        private String pdfSignTimestampUrl;
+        private String pdfUserPassword;
+        private String pdfOwnerPassword;
+        private String pdfPermissions;
+        private String pdfAccessibility;
+        private Boolean pdfLinearize;
 
         RenderRequestBuilder(ForgeClient client, String html, String url) {
             this.client = client;
@@ -151,6 +164,7 @@ public class ForgeClient {
         public RenderRequestBuilder pdfKeywords(String keywords) { this.pdfKeywords = keywords; return this; }
         public RenderRequestBuilder pdfCreator(String creator) { this.pdfCreator = creator; return this; }
         public RenderRequestBuilder pdfBookmarks(boolean bookmarks) { this.pdfBookmarks = bookmarks; return this; }
+        public RenderRequestBuilder pdfPageNumbers(boolean pageNumbers) { this.pdfPageNumbers = pageNumbers; return this; }
         public RenderRequestBuilder pdfWatermarkText(String text) { this.pdfWatermarkText = text; return this; }
         public RenderRequestBuilder pdfWatermarkImage(String base64Data) { this.pdfWatermarkImage = base64Data; return this; }
         public RenderRequestBuilder pdfWatermarkOpacity(double opacity) { this.pdfWatermarkOpacity = opacity; return this; }
@@ -195,6 +209,19 @@ public class ForgeClient {
             return this;
         }
 
+        public RenderRequestBuilder pdfMode(PdfMode mode) { this.pdfMode = mode.getValue(); return this; }
+        public RenderRequestBuilder pdfSignCertificate(String data) { this.pdfSignCertificate = data; return this; }
+        public RenderRequestBuilder pdfSignPassword(String password) { this.pdfSignPassword = password; return this; }
+        public RenderRequestBuilder pdfSignName(String name) { this.pdfSignName = name; return this; }
+        public RenderRequestBuilder pdfSignReason(String reason) { this.pdfSignReason = reason; return this; }
+        public RenderRequestBuilder pdfSignLocation(String location) { this.pdfSignLocation = location; return this; }
+        public RenderRequestBuilder pdfSignTimestampUrl(String url) { this.pdfSignTimestampUrl = url; return this; }
+        public RenderRequestBuilder pdfUserPassword(String password) { this.pdfUserPassword = password; return this; }
+        public RenderRequestBuilder pdfOwnerPassword(String password) { this.pdfOwnerPassword = password; return this; }
+        public RenderRequestBuilder pdfPermissions(String permissions) { this.pdfPermissions = permissions; return this; }
+        public RenderRequestBuilder pdfAccessibility(AccessibilityLevel level) { this.pdfAccessibility = level.getValue(); return this; }
+        public RenderRequestBuilder pdfLinearize(boolean linearize) { this.pdfLinearize = linearize; return this; }
+
         /** Build the JSON payload. */
         public JsonObject buildPayload() {
             JsonObject p = new JsonObject();
@@ -230,10 +257,14 @@ public class ForgeClient {
 
             if (pdfTitle != null || pdfAuthor != null || pdfSubject != null
                     || pdfKeywords != null || pdfCreator != null || pdfBookmarks != null
+                    || pdfPageNumbers != null
                     || pdfWatermarkText != null || pdfWatermarkImage != null || pdfWatermarkOpacity != null
                     || pdfWatermarkRotation != null || pdfWatermarkColor != null || pdfWatermarkFontSize != null
                     || pdfWatermarkScale != null || pdfWatermarkLayer != null || pdfWatermarkPages != null
-                    || pdfStandard != null || pdfEmbeddedFiles != null || pdfBarcodes != null) {
+                    || pdfStandard != null || pdfEmbeddedFiles != null || pdfBarcodes != null
+                    || pdfMode != null || pdfSignCertificate != null || pdfUserPassword != null
+                    || pdfOwnerPassword != null || pdfPermissions != null || pdfAccessibility != null
+                    || pdfLinearize != null) {
                 JsonObject pdf = new JsonObject();
                 if (pdfTitle != null) pdf.addProperty("title", pdfTitle);
                 if (pdfAuthor != null) pdf.addProperty("author", pdfAuthor);
@@ -241,6 +272,7 @@ public class ForgeClient {
                 if (pdfKeywords != null) pdf.addProperty("keywords", pdfKeywords);
                 if (pdfCreator != null) pdf.addProperty("creator", pdfCreator);
                 if (pdfBookmarks != null) pdf.addProperty("bookmarks", pdfBookmarks);
+                if (pdfPageNumbers != null) pdf.addProperty("page_numbers", pdfPageNumbers);
                 if (pdfStandard != null) pdf.addProperty("standard", pdfStandard.getValue());
                 if (pdfWatermarkText != null || pdfWatermarkImage != null || pdfWatermarkOpacity != null
                         || pdfWatermarkRotation != null || pdfWatermarkColor != null || pdfWatermarkFontSize != null
@@ -284,6 +316,27 @@ public class ForgeClient {
                     }
                     pdf.add("barcodes", barcodeArr);
                 }
+                if (pdfMode != null) pdf.addProperty("mode", pdfMode);
+                if (pdfSignCertificate != null || pdfSignPassword != null || pdfSignName != null
+                        || pdfSignReason != null || pdfSignLocation != null || pdfSignTimestampUrl != null) {
+                    JsonObject sig = new JsonObject();
+                    if (pdfSignCertificate != null) sig.addProperty("certificate_data", pdfSignCertificate);
+                    if (pdfSignPassword != null) sig.addProperty("password", pdfSignPassword);
+                    if (pdfSignName != null) sig.addProperty("signer_name", pdfSignName);
+                    if (pdfSignReason != null) sig.addProperty("reason", pdfSignReason);
+                    if (pdfSignLocation != null) sig.addProperty("location", pdfSignLocation);
+                    if (pdfSignTimestampUrl != null) sig.addProperty("timestamp_url", pdfSignTimestampUrl);
+                    pdf.add("signature", sig);
+                }
+                if (pdfUserPassword != null || pdfOwnerPassword != null || pdfPermissions != null) {
+                    JsonObject enc = new JsonObject();
+                    if (pdfUserPassword != null) enc.addProperty("user_password", pdfUserPassword);
+                    if (pdfOwnerPassword != null) enc.addProperty("owner_password", pdfOwnerPassword);
+                    if (pdfPermissions != null) enc.addProperty("permissions", pdfPermissions);
+                    pdf.add("encryption", enc);
+                }
+                if (pdfAccessibility != null) pdf.addProperty("accessibility", pdfAccessibility);
+                if (pdfLinearize != null) pdf.addProperty("linearize", pdfLinearize);
                 p.add("pdf", pdf);
             }
 

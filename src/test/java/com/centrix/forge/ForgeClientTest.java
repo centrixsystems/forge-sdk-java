@@ -192,4 +192,165 @@ public class ForgeClientTest {
         assertEquals("Invoice", pdf.get("title").getAsString());
         assertEquals(1, pdf.getAsJsonArray("barcodes").size());
     }
+
+    // --- PdfMode enum tests ---
+
+    @Test
+    public void pdfModeValues() {
+        assertEquals("auto", PdfMode.AUTO.getValue());
+        assertEquals("vector", PdfMode.VECTOR.getValue());
+        assertEquals("raster", PdfMode.RASTER.getValue());
+    }
+
+    // --- AccessibilityLevel enum tests ---
+
+    @Test
+    public void accessibilityLevelValues() {
+        assertEquals("none", AccessibilityLevel.NONE.getValue());
+        assertEquals("basic", AccessibilityLevel.BASIC.getValue());
+        assertEquals("pdf/ua-1", AccessibilityLevel.PDF_UA_1.getValue());
+    }
+
+    // --- PDF mode in payload ---
+
+    @Test
+    public void pdfModePayload() {
+        JsonObject p = client().renderHtml("<h1>Test</h1>")
+                .pdfMode(PdfMode.VECTOR)
+                .buildPayload();
+
+        JsonObject pdf = p.getAsJsonObject("pdf");
+        assertEquals("vector", pdf.get("mode").getAsString());
+    }
+
+    // --- Signature in payload ---
+
+    @Test
+    public void pdfSignaturePayload() {
+        JsonObject p = client().renderHtml("<h1>Test</h1>")
+                .pdfSignCertificate("base64cert==")
+                .pdfSignPassword("secret")
+                .pdfSignName("John Doe")
+                .pdfSignReason("Approval")
+                .pdfSignLocation("New York")
+                .pdfSignTimestampUrl("https://tsa.example.com")
+                .buildPayload();
+
+        JsonObject pdf = p.getAsJsonObject("pdf");
+        assertTrue(pdf.has("signature"));
+        JsonObject sig = pdf.getAsJsonObject("signature");
+        assertEquals("base64cert==", sig.get("certificate_data").getAsString());
+        assertEquals("secret", sig.get("password").getAsString());
+        assertEquals("John Doe", sig.get("signer_name").getAsString());
+        assertEquals("Approval", sig.get("reason").getAsString());
+        assertEquals("New York", sig.get("location").getAsString());
+        assertEquals("https://tsa.example.com", sig.get("timestamp_url").getAsString());
+    }
+
+    @Test
+    public void pdfSignaturePartial() {
+        JsonObject p = client().renderHtml("<h1>Test</h1>")
+                .pdfSignCertificate("base64cert==")
+                .buildPayload();
+
+        JsonObject sig = p.getAsJsonObject("pdf").getAsJsonObject("signature");
+        assertEquals("base64cert==", sig.get("certificate_data").getAsString());
+        assertFalse(sig.has("password"));
+        assertFalse(sig.has("signer_name"));
+        assertFalse(sig.has("reason"));
+        assertFalse(sig.has("location"));
+        assertFalse(sig.has("timestamp_url"));
+    }
+
+    // --- Encryption in payload ---
+
+    @Test
+    public void pdfEncryptionPayload() {
+        JsonObject p = client().renderHtml("<h1>Test</h1>")
+                .pdfUserPassword("user123")
+                .pdfOwnerPassword("owner456")
+                .pdfPermissions("print,copy")
+                .buildPayload();
+
+        JsonObject pdf = p.getAsJsonObject("pdf");
+        assertTrue(pdf.has("encryption"));
+        JsonObject enc = pdf.getAsJsonObject("encryption");
+        assertEquals("user123", enc.get("user_password").getAsString());
+        assertEquals("owner456", enc.get("owner_password").getAsString());
+        assertEquals("print,copy", enc.get("permissions").getAsString());
+    }
+
+    @Test
+    public void pdfEncryptionPartial() {
+        JsonObject p = client().renderHtml("<h1>Test</h1>")
+                .pdfUserPassword("user123")
+                .buildPayload();
+
+        JsonObject enc = p.getAsJsonObject("pdf").getAsJsonObject("encryption");
+        assertEquals("user123", enc.get("user_password").getAsString());
+        assertFalse(enc.has("owner_password"));
+        assertFalse(enc.has("permissions"));
+    }
+
+    // --- Accessibility in payload ---
+
+    @Test
+    public void pdfAccessibilityPayload() {
+        JsonObject p = client().renderHtml("<h1>Test</h1>")
+                .pdfAccessibility(AccessibilityLevel.PDF_UA_1)
+                .buildPayload();
+
+        JsonObject pdf = p.getAsJsonObject("pdf");
+        assertEquals("pdf/ua-1", pdf.get("accessibility").getAsString());
+    }
+
+    // --- Linearize in payload ---
+
+    @Test
+    public void pdfLinearizePayload() {
+        JsonObject p = client().renderHtml("<h1>Test</h1>")
+                .pdfLinearize(true)
+                .buildPayload();
+
+        JsonObject pdf = p.getAsJsonObject("pdf");
+        assertTrue(pdf.get("linearize").getAsBoolean());
+    }
+
+    // --- No signature/encryption when not set ---
+
+    @Test
+    public void noSignatureOrEncryptionWhenNotSet() {
+        JsonObject p = client().renderHtml("<h1>Test</h1>")
+                .pdfTitle("Test")
+                .buildPayload();
+
+        JsonObject pdf = p.getAsJsonObject("pdf");
+        assertFalse(pdf.has("signature"));
+        assertFalse(pdf.has("encryption"));
+        assertFalse(pdf.has("mode"));
+        assertFalse(pdf.has("accessibility"));
+        assertFalse(pdf.has("linearize"));
+    }
+
+    // --- All new options combined with existing ---
+
+    @Test
+    public void allNewOptionsWithMetadata() {
+        JsonObject p = client().renderHtml("<h1>Test</h1>")
+                .pdfTitle("Invoice")
+                .pdfMode(PdfMode.VECTOR)
+                .pdfSignCertificate("cert==")
+                .pdfUserPassword("pass")
+                .pdfAccessibility(AccessibilityLevel.BASIC)
+                .pdfLinearize(true)
+                .buildPayload();
+
+        JsonObject pdf = p.getAsJsonObject("pdf");
+        assertEquals("Invoice", pdf.get("title").getAsString());
+        assertEquals("vector", pdf.get("mode").getAsString());
+        assertTrue(pdf.has("signature"));
+        assertTrue(pdf.has("encryption"));
+        assertEquals("basic", pdf.get("accessibility").getAsString());
+        assertTrue(pdf.get("linearize").getAsBoolean());
+    }
 }

@@ -201,6 +201,7 @@ All methods return the builder for chaining. Call `.send()` to execute.
 | `pdfKeywords` | `String` | PDF keywords (comma-separated) |
 | `pdfCreator` | `String` | PDF creator application name |
 | `pdfBookmarks` | `boolean` | Generate PDF bookmarks from headings |
+| `pdfPageNumbers` | `boolean` | Add "Page X of Y" footers to each page |
 | `pdfWatermarkText` | `String` | Watermark text on each page |
 | `pdfWatermarkImage` | `String` | Base64-encoded PNG/JPEG watermark image |
 | `pdfWatermarkOpacity` | `double` | Watermark opacity (0.0-1.0, default: 0.15) |
