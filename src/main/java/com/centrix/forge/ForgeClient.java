@@ -137,6 +137,7 @@ public class ForgeClient {
         private String pdfPermissions;
         private String pdfAccessibility;
         private Boolean pdfLinearize;
+        private String pdfLang;
 
         RenderRequestBuilder(ForgeClient client, String html, String url) {
             this.client = client;
@@ -221,6 +222,8 @@ public class ForgeClient {
         public RenderRequestBuilder pdfPermissions(String permissions) { this.pdfPermissions = permissions; return this; }
         public RenderRequestBuilder pdfAccessibility(AccessibilityLevel level) { this.pdfAccessibility = level.getValue(); return this; }
         public RenderRequestBuilder pdfLinearize(boolean linearize) { this.pdfLinearize = linearize; return this; }
+        /** Document language as a BCP 47 tag (e.g. "en-US"). Required for PDF/UA-1. */
+        public RenderRequestBuilder pdfLang(String lang) { this.pdfLang = lang; return this; }
 
         /** Build the JSON payload. */
         public JsonObject buildPayload() {
@@ -264,7 +267,7 @@ public class ForgeClient {
                     || pdfStandard != null || pdfEmbeddedFiles != null || pdfBarcodes != null
                     || pdfMode != null || pdfSignCertificate != null || pdfUserPassword != null
                     || pdfOwnerPassword != null || pdfPermissions != null || pdfAccessibility != null
-                    || pdfLinearize != null) {
+                    || pdfLinearize != null || pdfLang != null) {
                 JsonObject pdf = new JsonObject();
                 if (pdfTitle != null) pdf.addProperty("title", pdfTitle);
                 if (pdfAuthor != null) pdf.addProperty("author", pdfAuthor);
@@ -337,6 +340,7 @@ public class ForgeClient {
                 }
                 if (pdfAccessibility != null) pdf.addProperty("accessibility", pdfAccessibility);
                 if (pdfLinearize != null) pdf.addProperty("linearize", pdfLinearize);
+                if (pdfLang != null) pdf.addProperty("document_lang", pdfLang);
                 p.add("pdf", pdf);
             }
 

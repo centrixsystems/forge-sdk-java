@@ -212,6 +212,7 @@ All methods return the builder for chaining. Call `.send()` to execute.
 | `pdfWatermarkLayer` | `WatermarkLayer` | Layer position: `OVER` or `UNDER` |
 | `pdfStandard` | `PdfStandard` | PDF standard: `NONE`, `A2B`, `A3B` |
 | `pdfAttach` | `String, String, ...` | Embed file: path, base64 data, mime type, description, relationship |
+| `pdfLang` | `String` | Document language (BCP 47 tag, e.g. `"en-US"`). Required for PDF/UA-1 |
 
 | Terminal Method | Returns | Description |
 |-----------------|---------|-------------|
