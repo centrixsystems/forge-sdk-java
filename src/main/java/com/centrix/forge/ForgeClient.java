@@ -88,6 +88,38 @@ public class ForgeClient {
         return resp.body();
     }
 
+    RenderResponse sendWithResponse(JsonObject payload) throws ForgeException {
+        String body = GSON.toJson(payload);
+
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/render"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+        HttpResponse<byte[]> resp;
+        try {
+            resp = httpClient.send(req, HttpResponse.BodyHandlers.ofByteArray());
+        } catch (IOException | InterruptedException e) {
+            throw new ForgeConnectionException(e);
+        }
+
+        if (resp.statusCode() != 200) {
+            String message;
+            try {
+                JsonObject errBody = JsonParser.parseString(new String(resp.body()))
+                        .getAsJsonObject();
+                message = errBody.get("error").getAsString();
+            } catch (Exception e) {
+                message = "HTTP " + resp.statusCode();
+            }
+            throw new ForgeServerException(resp.statusCode(), message);
+        }
+
+        List<String> warnings = resp.headers().allValues("X-Forge-Warning");
+        return new RenderResponse(resp.body(), warnings);
+    }
+
     /** Builder for a render request. */
     public static class RenderRequestBuilder {
         private final ForgeClient client;
@@ -350,6 +382,12 @@ public class ForgeClient {
         /** Send the render request and return raw output bytes. */
         public byte[] send() throws ForgeException {
             return client.send(buildPayload());
+        }
+
+        /** Send the render request and return a {@link RenderResponse} that includes any
+         *  CSS compatibility warnings emitted by the server via {@code X-Forge-Warning} headers. */
+        public RenderResponse sendResponse() throws ForgeException {
+            return client.sendWithResponse(buildPayload());
         }
     }
 }
